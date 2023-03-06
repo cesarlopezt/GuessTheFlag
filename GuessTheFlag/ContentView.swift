@@ -12,8 +12,12 @@ struct ContentView: View {
     @State private var showingScore = false
     @State private var alertTitle = ""
     @State private var alertDescription = ""
+    @State private var alertButtonText = "Continue"
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
-    @State var correctAnswer = Int.random(in: 0...2)
+    @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var questionNumber = 1
+    
+    var maxNumberOfQuestions = 5
     
     var body: some View {
         
@@ -49,6 +53,13 @@ struct ContentView: View {
                                 .shadow(radius: 5)
                         }
                     }
+                    HStack {
+                        Spacer()
+                        Text("# \(questionNumber) of \(maxNumberOfQuestions)")
+                            .font(.subheadline.weight(.heavy))
+                            .foregroundColor(.white)
+                    }
+                    
                 }
                 .frame(maxWidth: .infinity)
                 .padding(20)
@@ -59,7 +70,11 @@ struct ContentView: View {
             }
             .padding([.leading, .trailing], 20)
         }.alert(alertTitle, isPresented: $showingScore) {
-            Button("Continue") {}
+            Button(alertButtonText) {
+                if (questionNumber == 1) {
+                    score = 0
+                }
+            }
         } message: {
             Text(alertDescription)
         }
@@ -68,16 +83,27 @@ struct ContentView: View {
     func flagTapped(_ index: Int) {
         if index == correctAnswer {
             alertTitle = "Correct!"
+            alertDescription = ""
             score += 1
         } else {
             alertTitle = "Wrong"
             alertDescription = "That is the flag of \(countries[index])"
         }
+        alertButtonText = "Continue"
         showingScore = true
         askQuestion()
     }
     
     func askQuestion() {
+        if questionNumber < maxNumberOfQuestions {
+            questionNumber += 1
+        } else {
+            questionNumber = 1
+            alertTitle = "Good Job!"
+            alertDescription = "Your score was \(score)/\(maxNumberOfQuestions)"
+            alertButtonText = "Play again"
+            showingScore = true
+        }
         countries = countries.shuffled()
         correctAnswer = Int.random(in: 0...2)
     }

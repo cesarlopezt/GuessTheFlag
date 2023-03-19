@@ -23,12 +23,19 @@ extension Text {
 
 struct FlagImage: View {
     var country: String
+    var opacityAmount: Double
+    var scaleAmount: Double
+    var rotateAmount: Double
 
     var body: some View {
         Image(country)
             .renderingMode(.original)
             .clipShape(Capsule())
             .shadow(radius: 5)
+            .opacity(opacityAmount)
+            .scaleEffect(scaleAmount)
+            .rotation3DEffect(.degrees(Double(rotateAmount)),
+                              axis: (x: 0.0, y: 1.0, z: 0.0))
     }
 }
 
@@ -41,6 +48,11 @@ struct ContentView: View {
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
     @State private var questionNumber = 1
+
+    @State private var chosenFlag = -1
+    @State private var rotateAmount = 0.0
+    @State private var opacityAmount = 1.0
+    @State private var scaleAmount = 1.0
     
     var maxNumberOfQuestions = 5
     
@@ -70,8 +82,22 @@ struct ContentView: View {
                     ForEach(0..<3) { number in
                         Button {
                             flagTapped(number)
+                            chosenFlag = number
+                            withAnimation(.easeOut(duration: 1)) {
+                                rotateAmount += 360
+                            }
+                            withAnimation() {
+                                opacityAmount -= 0.75
+                                scaleAmount -= 0.2
+                            }
+                            
                         } label: {
-                            FlagImage(country: countries[number])
+                            FlagImage(
+                                country: countries[number],
+                                opacityAmount: (chosenFlag == number ? 1 : opacityAmount),
+                                scaleAmount: (chosenFlag == number ? 1 : scaleAmount),
+                                rotateAmount: (chosenFlag == number ? rotateAmount : 0)
+                            )
                         }
                     }
                     HStack {
@@ -92,6 +118,7 @@ struct ContentView: View {
             .padding([.leading, .trailing], 20)
         }.alert(alertTitle, isPresented: $showingScore) {
             Button(alertButtonText) {
+                askQuestion()
                 if (questionNumber == 1) {
                     score = 0
                 }
@@ -112,7 +139,6 @@ struct ContentView: View {
         }
         alertButtonText = "Continue"
         showingScore = true
-        askQuestion()
     }
     
     func askQuestion() {
@@ -127,6 +153,11 @@ struct ContentView: View {
         }
         countries = countries.shuffled()
         correctAnswer = Int.random(in: 0...2)
+        
+        chosenFlag = -1
+        opacityAmount = 1.0
+        rotateAmount = 0.0
+        scaleAmount = 1.0
     }
 }
 
